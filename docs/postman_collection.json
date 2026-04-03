@@ -1,0 +1,299 @@
+{
+  "info": {
+    "name": "Finance Backend API",
+    "description": "Postman collection for Finance Data Processing and Access Control Backend",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "version": "1.0.0"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:4000/api"
+    },
+    {
+      "key": "token",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "Login",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "login"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"admin@example.com\",\n  \"password\": \"admin123\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Seed Admin (dev only)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/auth/seed-admin",
+              "host": ["{{baseUrl}}"],
+              "path": ["auth", "seed-admin"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Users (Admin only)",
+      "item": [
+        {
+          "name": "Create User",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Analyst One\",\n  \"email\": \"analyst@example.com\",\n  \"password\": \"secret123\",\n  \"roleName\": \"analyst\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "List Users",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users?page=1&limit=20",
+              "host": ["{{baseUrl}}"],
+              "path": ["users"],
+              "query": [
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "20" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get User by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update User",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/users/{{userId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["users", "{{userId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Updated Name\",\n  \"status\": \"inactive\"\n}"
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Records",
+      "item": [
+        {
+          "name": "List Records (Analyst/Admin)",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/records?type=income&page=1&limit=25",
+              "host": ["{{baseUrl}}"],
+              "path": ["records"],
+              "query": [
+                { "key": "type", "value": "income" },
+                { "key": "page", "value": "1" },
+                { "key": "limit", "value": "25" }
+              ]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Get Record by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/records/{{recordId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["records", "{{recordId}}"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Create Record (Admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/records",
+              "host": ["{{baseUrl}}"],
+              "path": ["records"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 1200,\n  \"type\": \"income\",\n  \"category\": \"salary\",\n  \"date\": \"2026-04-01T00:00:00.000Z\",\n  \"description\": \"April salary\"\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Update Record (Admin)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/records/{{recordId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["records", "{{recordId}}"]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"amount\": 1500\n}"
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Delete Record (Admin, soft)",
+          "request": {
+            "method": "DELETE",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/records/{{recordId}}",
+              "host": ["{{baseUrl}}"],
+              "path": ["records", "{{recordId}}"]
+            }
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Dashboard",
+      "item": [
+        {
+          "name": "Summary",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "summary"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Category Totals",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/category-totals",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "category-totals"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Monthly Trends",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/monthly-trends",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "monthly-trends"]
+            }
+          },
+          "response": []
+        },
+        {
+          "name": "Recent Activity",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Authorization", "value": "Bearer {{token}}" }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/dashboard/recent-activity?limit=10",
+              "host": ["{{baseUrl}}"],
+              "path": ["dashboard", "recent-activity"],
+              "query": [
+                { "key": "limit", "value": "10" }
+              ]
+            }
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
