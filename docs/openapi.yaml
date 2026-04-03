@@ -6,6 +6,8 @@ info:
     Backend API for managing users, roles, financial records, and dashboard analytics
     with role-based access control.
 servers:
+  - url: https://finance-dashboard-backend-8onq.onrender.com/api
+    description: Production (Render)
   - url: http://localhost:4000/api
     description: Local development
 
