@@ -7,17 +7,36 @@ const { ROLES } = require('../utils/constants');
 
 const JWT_EXPIRES_IN = '8h';
 
-// Create initial admin user if none exists (for local setup convenience).
+// Ensure core roles exist and create initial admin user if none exists.
 const ensureDefaultAdmin = async () => {
-  const existingAdminRole = await Role.findOne({ name: ROLES.ADMIN });
-  let adminRole = existingAdminRole;
-
-  if (!adminRole) {
-    adminRole = await Role.create({
+  const roleDefinitions = [
+    {
+      name: ROLES.VIEWER,
+      description: 'Viewer with read-only access to dashboard analytics',
+      permissions: ['analytics:view'],
+    },
+    {
+      name: ROLES.ANALYST,
+      description: 'Analyst with read access to records and analytics',
+      permissions: ['analytics:view', 'records:read'],
+    },
+    {
       name: ROLES.ADMIN,
       description: 'System administrator with full access',
       permissions: ['users:manage', 'records:manage', 'analytics:view'],
-    });
+    },
+  ];
+
+  // Upsert core roles so creating users by role name is reliable.
+  const roles = {};
+  // eslint-disable-next-line no-restricted-syntax
+  for (const def of roleDefinitions) {
+    // eslint-disable-next-line no-await-in-loop
+    const role =
+      (await Role.findOne({ name: def.name })) ||
+      // eslint-disable-next-line no-await-in-loop
+      (await Role.create(def));
+    roles[def.name] = role;
   }
 
   const existingAdmin = await User.findOne({ email: 'admin@example.com' }).lean();
@@ -28,7 +47,7 @@ const ensureDefaultAdmin = async () => {
       name: 'Default Admin',
       email: 'admin@example.com',
       passwordHash,
-      role: adminRole._id,
+      role: roles[ROLES.ADMIN]._id,
     });
   }
 };
