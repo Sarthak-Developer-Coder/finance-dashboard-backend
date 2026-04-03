@@ -1,17 +1,33 @@
 # Finance Data Processing and Access Control Backend
 
-A backend service for a finance dashboard that manages users, roles, financial records, and summary analytics with clear role-based access control.
+Backend API for a finance dashboard where different users (Viewer, Analyst, Admin) work with financial records under strict role-based access control. The design deliberately mirrors production backend practices: clear layering, explicit business rules, and predictable behavior under failure.
+
+> This project is intentionally structured as if it will be reviewed by senior backend engineers: small, focused modules; explicit contracts between layers; and an emphasis on correctness over cleverness.
 
 ## 1. Project Overview
 
-This service powers a finance dashboard where different user types (viewer, analyst, admin) interact with financial data at varying permission levels. It focuses on:
+This repository implements the backend for a finance dashboard assignment. The goal is to show how I design and implement a small but realistic backend that is:
 
-- Clean separation between HTTP layer, business services, and data models
-- Explicit role-based access control
-- Efficient financial aggregations for dashboards
-- Good validation, error handling, and predictable API behavior
+- Easy to reason about for reviewers.
+- Safe and predictable for consumers (frontend, tools).
+- Structured in a way that can grow beyond the assignment without a redesign.
 
-The implementation is intentionally compact but production-minded: it uses a layered architecture, explicit schemas, and defensive coding patterns.
+The system supports:
+
+- User and role management (Viewer, Analyst, Admin).
+- CRUD operations on financial records with filtering and soft delete.
+- Dashboard-friendly summaries (totals, category breakdowns, monthly trends, recent activity).
+- Strict role-based access control at the middleware layer.
+
+### How this project maps to the assignment
+
+- **User and Role Management** – Users are stored with roles and statuses; admins can manage users and switch roles.
+- **Financial Records Management** – Full CRUD for financial records with filters for type, category, dates, and amount.
+- **Dashboard Summary APIs** – Aggregation endpoints return totals, category-wise data, trends, and recent activity.
+- **Access Control Logic** – RBAC middleware enforces Viewer/Analyst/Admin permissions consistently across routes.
+- **Validation and Error Handling** – Joi-based validation and a global error handler produce clear, consistent responses.
+- **Data Persistence** – MongoDB + Mongoose with indexes tuned for analytics queries.
+- **Optional Enhancements** – JWT auth, pagination, soft delete, and API documentation via OpenAPI + Postman.
 
 ## 2. Architecture
 
@@ -21,17 +37,25 @@ The implementation is intentionally compact but production-minded: it uses a lay
 - Joi for validation
 - JWT for authentication
 
-**Folder structure**
-- `src/app.js` – Express app wiring
-- `src/server.js` – Process bootstrap and DB connect
-- `src/config/db.js` – Mongoose connection
-- `src/models` – Mongoose schemas for core entities
-- `src/services` – Business logic, independent of HTTP
-- `src/controllers` – HTTP adapters using services
-- `src/routes` – Route definitions and middleware composition
-- `src/middleware` – Auth, RBAC, validation, error handling
-- `src/utils` – Small shared helpers/constants
-- `.env.example` – Environment reference
+**Why this stack**
+- **Node.js + Express** – Simple, battle-tested HTTP layer with a huge ecosystem; easy to express middleware-based concerns (auth, RBAC, validation).
+- **MongoDB + Mongoose** – Natural fit for analytics-style aggregations using the aggregation pipeline; Mongoose adds schemas, validation, and indexing in a single place.
+- **Joi** – Declarative validation with good error messages and reusability across routes.
+- **JWT** – Stateless auth that works well with frontend SPAs and can scale horizontally without shared session state.
+
+**Folder structure (high level)**
+- `src/app.js` – Express app wiring and global middleware.
+- `src/server.js` – Process bootstrap and database connection.
+- `src/config/db.js` – Mongoose connection configuration.
+- `src/models` – Mongoose schemas for core entities (User, Role, FinancialRecord).
+- `src/services` – Business logic and data access orchestration.
+- `src/controllers` – HTTP adapters that translate requests into service calls.
+- `src/routes` – Route definitions and middleware composition (auth, RBAC, validation).
+- `src/middleware` – Cross-cutting concerns (auth, RBAC, validation, error handling).
+- `src/utils` – Shared helpers/constants (e.g. ApiError, catchAsync, role enums).
+- `src/validations` – Joi schemas for request validation.
+- `docs` – OpenAPI spec and Postman collection.
+- `.env.example` – Environment reference for local development.
 
 **Layered flow**
 1. Route attaches middleware: auth → RBAC → validation.
@@ -41,6 +65,18 @@ The implementation is intentionally compact but production-minded: it uses a lay
 5. Errors bubble to a global error handler for consistent responses.
 
 This keeps business logic testable and minimizes Express-specific code in the core domain.
+
+### Role Responsibility Matrix
+
+| Capability                          | Viewer | Analyst | Admin |
+|-------------------------------------|:------:|:-------:|:-----:|
+| Login and view own profile          |   ✓    |    ✓    |   ✓   |
+| View dashboard analytics            |   ✓    |    ✓    |   ✓   |
+| List financial records              |   ✗    |    ✓    |   ✓   |
+| View financial record details       |   ✗    |    ✓    |   ✓   |
+| Create / update / delete records    |   ✗    |    ✗    |   ✓   |
+| Create / update users and roles     |   ✗    |    ✗    |   ✓   |
+| Activate / deactivate users         |   ✗    |    ✗    |   ✓   |
 
 ## 3. Data Modeling
 
@@ -357,13 +393,26 @@ This yields predictable, debuggable responses for both clients and developers.
    # POST http://localhost:4000/api/auth/seed-admin
    ```
 5. Login using:
-   - email: `admin@local`
+  - email: `admin@example.com`
    - password: `admin123`
 6. Use the issued JWT to call protected APIs.
 
 ### Scripts
 - `npm run dev` – start API with nodemon.
 - `npm start` – start API with Node.
+
+### Deploying to Render (example)
+
+1. Push this repository to GitHub (already done for this reference).
+2. In Render, create a new **Web Service** pointing to this repo.
+3. Use:
+  - **Build command**: `npm install`
+  - **Start command**: `npm start`
+4. Configure environment variables in Render:
+  - `MONGODB_URI` – production MongoDB connection string.
+  - `JWT_SECRET` – long random string.
+  - `NODE_ENV` – `production`.
+5. Once deployed, use the public base URL instead of `http://localhost:4000` when calling the APIs.
 
 ## 9. Assumptions & Tradeoffs
 
@@ -378,7 +427,20 @@ Tradeoffs:
 - Roles are modeled as documents to allow future extension (permissions, custom role names), but the app mostly uses the `name` field.
 - For simplicity, there is no refresh-token or password-reset flow.
 
-## 10. Future Improvements
+## 10. Backend Best Practices Applied
+
+This codebase intentionally demonstrates a few specific practices:
+
+- **Separation of concerns** – Routes, controllers, services, and models each have one job.
+- **Thin controllers, fat services** – Business rules live in services, not in route handlers.
+- **Centralized error handling** – All errors flow through a single middleware that standardizes responses.
+- **Centralized access control** – RBAC is enforced by middleware, not scattered `if` statements.
+- **Schema-first design** – Mongoose schemas capture structure, constraints, and indexes in one place.
+- **Validation at the edge** – Joi validates incoming data before it reaches business logic.
+- **Soft delete for critical data** – Financial records are never hard-deleted by default.
+- **Environment-driven configuration** – Secrets and DB configuration come from environment variables.
+
+## 11. Future Improvements
 
 - Add automated tests (unit + integration) for services and controllers.
 - Introduce a structured logger and request IDs for observability.
@@ -386,7 +448,7 @@ Tradeoffs:
 - Implement refresh tokens and secure password reset flows.
 - Extend RBAC to permission-level checks instead of only role names.
 
-## 11. API Documentation
+## 12. API Documentation
 
 - OpenAPI 3 specification: [docs/openapi.yaml](docs/openapi.yaml)
   - Import into Swagger UI, Insomnia, or other tools to explore and test endpoints.
