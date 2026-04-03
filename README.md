@@ -2,7 +2,6 @@
 
 Backend API for a finance dashboard where different users (Viewer, Analyst, Admin) work with financial records under strict role-based access control. The design deliberately mirrors production backend practices: clear layering, explicit business rules, and predictable behavior under failure.
 
-> This project is intentionally structured as if it will be reviewed by senior backend engineers: small, focused modules; explicit contracts between layers; and an emphasis on correctness over cleverness.
 
 ## 1. Project Overview
 
