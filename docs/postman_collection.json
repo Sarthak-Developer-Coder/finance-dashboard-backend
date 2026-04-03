@@ -8,7 +8,7 @@
   "variable": [
     {
       "key": "baseUrl",
-      "value": "http://localhost:4000/api"
+      "value": "https://finance-dashboard-backend-8onq.onrender.com/api"
     },
     {
       "key": "token",
